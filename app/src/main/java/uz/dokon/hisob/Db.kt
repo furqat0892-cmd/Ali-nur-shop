@@ -428,14 +428,14 @@ class Db(private val ctx: Context) : SQLiteOpenHelper(ctx, NAME, null, 1) {
 
     // ---------------------------------------------------------------- Hisobot
 
-    fun report(since: Long): Report {
+    fun report(since: Long, until: Long = Long.MAX_VALUE): Report {
         val db = readableDatabase
         var count = 0
         var revenue = 0L
         var received = 0L
         db.rawQuery(
             "SELECT COUNT(*), COALESCE(SUM(total),0), COALESCE(SUM(paid),0) " +
-                "FROM sales WHERE cancelled=0 AND ts>=$since", null
+                "FROM sales WHERE cancelled=0 AND ts>=$since AND ts<$until", null
         ).use {
             if (it.moveToFirst()) {
                 count = it.getInt(0)
@@ -446,25 +446,25 @@ class Db(private val ctx: Context) : SQLiteOpenHelper(ctx, NAME, null, 1) {
         var profit = 0.0
         db.rawQuery(
             "SELECT COALESCE(SUM((si.price - si.cost) * si.qty),0) FROM sale_items si " +
-                "JOIN sales s ON s.id=si.sale_id WHERE s.cancelled=0 AND s.ts>=$since", null
+                "JOIN sales s ON s.id=si.sale_id WHERE s.cancelled=0 AND s.ts>=$since AND ts<$until", null
         ).use { if (it.moveToFirst()) profit = it.getDouble(0) }
         var debtPaid = 0L
-        db.rawQuery("SELECT COALESCE(SUM(amount),0) FROM debt_payments WHERE ts>=$since", null)
+        db.rawQuery("SELECT COALESCE(SUM(amount),0) FROM debt_payments WHERE ts>=$since AND ts<$until", null)
             .use { if (it.moveToFirst()) debtPaid = it.getLong(0) }
         var purchases = 0.0
         db.rawQuery(
-            "SELECT COALESCE(SUM(price*qty),0) FROM moves WHERE kind='IN' AND ts>=$since " +
+            "SELECT COALESCE(SUM(price*qty),0) FROM moves WHERE kind='IN' AND ts>=$since AND ts<$until " +
                 "AND note NOT IN (?, ?)", arrayOf(INITIAL_NOTE, ADJUST_NOTE)
         ).use { if (it.moveToFirst()) purchases = it.getDouble(0) }
         var writeoff = 0.0
         db.rawQuery(
-            "SELECT COALESCE(SUM(price*qty),0) FROM moves WHERE kind='OUT' AND ts>=$since", null
+            "SELECT COALESCE(SUM(price*qty),0) FROM moves WHERE kind='OUT' AND ts>=$since AND ts<$until", null
         ).use { if (it.moveToFirst()) writeoff = it.getDouble(0) }
         val top = ArrayList<Pair<String, Long>>()
         db.rawQuery(
             "SELECT p.name, SUM(si.price*si.qty) AS t FROM sale_items si " +
                 "JOIN sales s ON s.id=si.sale_id JOIN products p ON p.id=si.product_id " +
-                "WHERE s.cancelled=0 AND s.ts>=$since GROUP BY p.id ORDER BY t DESC LIMIT 5", null
+                "WHERE s.cancelled=0 AND s.ts>=$since AND ts<$until GROUP BY p.id ORDER BY t DESC LIMIT 5", null
         ).use { while (it.moveToNext()) top.add(Pair(it.getString(0), Math.round(it.getDouble(1)))) }
         return Report(
             count, revenue, Math.round(profit), received + debtPaid, revenue - received,

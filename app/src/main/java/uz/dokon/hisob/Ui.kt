@@ -26,11 +26,44 @@ object Store {
     lateinit var db: Db
     val tick = mutableIntStateOf(0)
 
+    // Rol va bulut (Firebase) sozlamalari
+    lateinit var prefs: android.content.SharedPreferences
+    var role by mutableStateOf("")
+    var dbUrl by mutableStateOf("")
+    var shopCode by mutableStateOf("")
+    var myName by mutableStateOf("")
+    var shipments by mutableStateOf<List<Shipment>>(emptyList())
+    var syncError by mutableStateOf<String?>(null)
+    val refreshKey = mutableIntStateOf(0)
+
+    fun configured(): Boolean = dbUrl.isNotBlank() && Cloud.cleanCode(shopCode).isNotEmpty()
+
+    fun saveSettings(r: String, url: String, code: String, name: String) {
+        role = r
+        dbUrl = url.trim()
+        shopCode = Cloud.cleanCode(code)
+        myName = name.trim()
+        prefs.edit()
+            .putString("role", role)
+            .putString("url", dbUrl)
+            .putString("code", shopCode)
+            .putString("name", myName)
+            .apply()
+        shipments = emptyList()
+        syncError = null
+        refreshKey.intValue = refreshKey.intValue + 1
+    }
+
     fun init(c: Context) {
         if (!::app.isInitialized) {
             app = c.applicationContext
             db = Db(app)
             db.writableDatabase
+            prefs = app.getSharedPreferences("dokon_prefs", Context.MODE_PRIVATE)
+            role = prefs.getString("role", "") ?: ""
+            dbUrl = prefs.getString("url", "") ?: ""
+            shopCode = prefs.getString("code", "") ?: ""
+            myName = prefs.getString("name", "") ?: ""
         }
     }
 

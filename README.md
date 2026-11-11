@@ -1,21 +1,29 @@
-# Do'kon Hisobi
+# Do'kon Hisobi 2.0
 
-Idish-tovoq va uy-xo'jalik do'koni uchun ombor va sotuv hisobi Android ilovasi (Kotlin + Jetpack Compose, SQLite). Internet shart emas, hamma ma'lumot telefonning o'zida saqlanadi.
+Idish-tovoq va uy-xo'jalik do'koni uchun ombor, sotuv va **tovar jo'natish/qabul qilish** ilovasi (Kotlin + Jetpack Compose).
 
-## Imkoniyatlar
-- **Sotuv**: nomi yoki kodi bo'yicha qidirish, savat, narx/miqdorni o'zgartirish, Naqd / Karta / Nasiya, omborda yetmasa ogohlantirish
-- **Ombor**: mahsulot qo'shish/tahrirlash/o'chirish, kategoriya, birlik (dona, kg, litr...), minimal qoldiq, "kam qolganlar" filtri, ombor qiymati
-- **Kirim**: yetkazib beruvchidan tovar kelishi, olish va sotish narxi, ustama foizi
-- **Chiqim**: singan/yaroqsiz tovarni hisobdan chiqarish
-- **Tarix**: kirim/chiqim yozuvlarini bekor qilish (qoldiq avtomatik tiklanadi)
-- **Hisobot**: bugun / 7 kun / 30 kun: savdo, foyda, cheklar, nasiya, eng ko'p sotilganlar
-- **Mijozlar va qarzlar**: nasiya savdo, qarz to'lovlarini qabul qilish
-- **Sotuvlar tarixi**: sotuvni bekor qilish (tovar omborga qaytadi)
-- **Zaxira nusxa** va tiklash, **CSV eksport** (Excel uchun)
+## Ikki rol (bitta APK)
+**Do'kon egasi**: tovarni (nomi, soni, narxi) jo'natadi, qabul natijasini ko'radi, 10 kunlik jo'natma hisobotini ko'radi.
+
+**Qabul qiluvchi (do'kon)**: jo'natilgan tovar "Xabarlar" bo'limida xabar bo'lib keladi. Qabul qilishda har bir tovar uchun singan / yo'q sonini kiritadi. Hammasi joyida bo'lsa "Qabul qildim", kamchilik bo'lsa "Qabul qildim + kamchiliklarni yuborish". Butun tovar avtomatik omborga kirim bo'ladi. Sotuv, ombor, kirim/chiqim, nasiya, zaxira nusxa ham shu rolda.
+
+**10 kunlik hisobot**: 1–10, 11–20, 21–oy oxiri davrlari bo'yicha kirim, chiqim, savdo, sof foyda, kamchilik qiymati (Hisobot → 10 kunlik).
+
+## Firebase sozlash (bir marta, 5 daqiqa)
+1. console.firebase.google.com → **Create a project** (nomi ixtiyoriy, Analytics kerak emas).
+2. Chapdagi menyu: **Build → Realtime Database → Create Database** → joylashuv tanlang → **Start in test mode**.
+3. **Rules** bo'limiga quyidagini qo'ying va **Publish** bosing:
+```
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "shops": { "$code": { ".read": true, ".write": true } }
+  }
+}
+```
+4. **Data** bo'limi tepasidagi havolani nusxalang (`https://...firebaseio.com` yoki `https://...firebasedatabase.app`).
+5. Ikkala telefonda ilovani oching: rolni tanlang, **bir xil baza havolasi** va **bir xil do'kon kodi** kiriting (kodni uzun va tasodifiy qiling, u parol vazifasini bajaradi), "Ulanishni tekshirish" ni bosing.
 
 ## APK olish
-1. Bu papkadagi hamma narsani GitHub repozitoriyga yuklang (`main` shoxiga).
-2. GitHub'da **Actions** bo'limiga kiring, "Build APK" tugagach (3-6 daqiqa) pastdagi **Artifacts** dan `Dokon-Hisobi-APK` ni yuklab oling.
-3. Zipni ochib, `app-debug.apk` ni telefonga o'rnating.
-
-Imzo kaliti (`app/shop.jks`) repoda turadi, shuning uchun keyingi versiyalar eskisining ustiga ma'lumotlarni o'chirmasdan o'rnatiladi.
+Hamma narsani GitHub'ga yuklang (`main`), Actions → "Build APK" → Artifacts → `Dokon-Hisobi-APK`.

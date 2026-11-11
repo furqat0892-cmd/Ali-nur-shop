@@ -21,12 +21,16 @@ fun MoreScreen() {
         0 -> Sub("Sotuvlar tarixi", { section = -1 }) { SalesHistory() }
         1 -> Sub("Mijozlar va qarzlar", { section = -1 }) { Customers() }
         2 -> Sub("Zaxira va eksport", { section = -1 }) { BackupExport() }
+        3 -> Sub("Kirim / Chiqim", { section = -1 }) { StockScreen() }
+        4 -> Sub("Sozlamalar", { section = -1 }) { SettingsScreen(firstRun = false) }
         else -> Column(Modifier.fillMaxSize().padding(12.dp)) {
             ScreenTitle("Yana")
             listOf(
                 "Sotuvlar tarixi" to "Barcha cheklar, bekor qilish",
                 "Mijozlar va qarzlar" to "Nasiya savdo, qarz to'lovlari",
-                "Zaxira va eksport" to "Ma'lumotni saqlash, Excel (CSV)"
+                "Zaxira va eksport" to "Ma'lumotni saqlash, Excel (CSV)",
+                "Kirim / Chiqim" to "Qo'lda kirim, hisobdan chiqarish, tarix",
+                "Sozlamalar" to "Rol, Firebase baza havolasi, do'kon kodi"
             ).forEachIndexed { i, (t, d) ->
                 Card(Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { section = i }) {
                     Column(Modifier.padding(16.dp)) {
