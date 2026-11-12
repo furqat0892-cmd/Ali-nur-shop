@@ -26,7 +26,8 @@ class MainActivity : ComponentActivity() {
             DokonTheme {
                 Box(
                     Modifier.fillMaxSize().background(
-                        Brush.verticalGradient(listOf(Color(0xFFCFF1EC), Color(0xFFF8FAFC), Color(0xFFF8FAFC)))
+                        if (Store.role.isEmpty()) Brush.verticalGradient(listOf(Color(0xFFCFF1EC), Color(0xFFF8FAFC), Color(0xFFF8FAFC)))
+                        else Brush.verticalGradient(listOf(Color(0xFFF1F4F8), Color(0xFFF1F4F8)))
                     )
                 ) {
                     if (Store.role.isEmpty()) {
@@ -44,9 +45,10 @@ private data class NavTab(val label: String, val icon: ImageVector)
 
 @Composable
 private fun AppRoot(role: String) {
-    // Do'kon egasi jo'natgan tovarlarni har 10 soniyada bazadan olib turadi
+    // Jo'natmalar va chatni bazadan olib turadi (chat ochiq bo'lsa tezroq)
     LaunchedEffect(Store.dbUrl, Store.shopCode, Store.refreshKey.intValue) {
         if (Store.configured()) {
+            val other = if (role == "owner") "receiver" else "owner"
             while (true) {
                 try {
                     Store.shipments = Cloud.list()
@@ -54,13 +56,19 @@ private fun AppRoot(role: String) {
                 } catch (e: Exception) {
                     Store.syncError = e.message ?: "Ulanish xatosi"
                 }
-                delay(10000)
+                try {
+                    Store.chat = ChatCloud.list()
+                    Store.readOther = ChatCloud.readOf(other)
+                } catch (_: Exception) {
+                }
+                delay(if (Store.chatOpen) 3000L else 8000L)
             }
         }
     }
 
     val tabs = if (role == "owner") {
         listOf(
+            NavTab("Chat", Icons.Filled.Email),
             NavTab("Jo'natish", Icons.Filled.Send),
             NavTab("Tarix", Icons.Filled.Home),
             NavTab("10 kunlik", Icons.Filled.Info),
@@ -68,38 +76,54 @@ private fun AppRoot(role: String) {
         )
     } else {
         listOf(
+            NavTab("Chat", Icons.Filled.Email),
             NavTab("Sotuv", Icons.Filled.ShoppingCart),
             NavTab("Ombor", Icons.Filled.Home),
-            NavTab("Xabarlar", Icons.Filled.Email),
             NavTab("Hisobot", Icons.Filled.Info),
             NavTab("Yana", Icons.Filled.Menu)
         )
     }
     var tab by rememberSaveable(role) { mutableIntStateOf(0) }
-    val pending = Store.shipments.count { it.receipt == null }
+
+    // Chatdagi o'qilmagan hodisalar soni (belgi uchun)
+    val seen = Store.seenTs
+    val unread = if (role == "receiver") {
+        Store.chat.count { it.from == "owner" && it.ts > seen } + Store.shipments.count { it.receipt == null }
+    } else {
+        Store.chat.count { it.from == "receiver" && it.ts > seen } +
+            Store.shipments.count { (it.receipt?.ts ?: 0L) > seen }
+    }
+    val showUnread = if (tab == 0 && role == "owner") 0 else unread
+
+    val partner = if (role == "owner") "Sotuvchi" else "Do'kon egasi"
+    val headTitle = if (tab == 0) partner else tabs[tab].label
+    val headSub = if (tab == 0) "Ali nur shop" else "Ali nur shop \u2022 " + Auth.roleName(role)
 
     Scaffold(
         containerColor = Color.Transparent,
+        topBar = { HeaderBar(headTitle, headSub) },
         bottomBar = {
-            NavigationBar(
-                modifier = Modifier.shadow(16.dp),
-                containerColor = Color.White
-            ) {
-                tabs.forEachIndexed { i, t ->
-                    NavigationBarItem(
-                        selected = tab == i,
-                        onClick = { tab = i },
-                        icon = {
-                            if (role == "receiver" && t.label == "Xabarlar" && pending > 0) {
-                                BadgedBox(badge = { Badge { Text(pending.toString()) } }) {
+            if (!(tab == 0 && Store.typing)) {
+                NavigationBar(
+                    modifier = Modifier.shadow(8.dp),
+                    containerColor = Color.White
+                ) {
+                    tabs.forEachIndexed { i, t ->
+                        NavigationBarItem(
+                            selected = tab == i,
+                            onClick = { tab = i },
+                            icon = {
+                                if (i == 0 && showUnread > 0) {
+                                    BadgedBox(badge = { Badge { Text(showUnread.toString()) } }) {
+                                        Icon(t.icon, contentDescription = t.label)
+                                    }
+                                } else {
                                     Icon(t.icon, contentDescription = t.label)
                                 }
-                            } else {
-                                Icon(t.icon, contentDescription = t.label)
-                            }
-                        },
-                        label = { Text(t.label) }
-                    )
+                            },
+                            label = { Text(t.label) }
+                        )
+                    }
                 }
             }
         }
@@ -107,16 +131,17 @@ private fun AppRoot(role: String) {
         Box(Modifier.padding(pad).fillMaxSize()) {
             if (role == "owner") {
                 when (tab) {
-                    0 -> OwnerSend()
-                    1 -> OwnerHistory()
-                    2 -> OwnerDekada()
+                    0 -> ChatScreen()
+                    1 -> OwnerSend()
+                    2 -> OwnerHistory()
+                    3 -> OwnerDekada()
                     else -> SettingsScreen(firstRun = false)
                 }
             } else {
                 when (tab) {
-                    0 -> SaleScreen()
-                    1 -> OmborScreen()
-                    2 -> InboxScreen()
+                    0 -> ChatScreen()
+                    1 -> SaleScreen()
+                    2 -> OmborScreen()
                     3 -> ReportScreen()
                     else -> MoreScreen()
                 }

@@ -38,17 +38,17 @@ fun Card(
     colors: CardColors = CardDefaults.cardColors(containerColor = Color.White),
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val shape = RoundedCornerShape(20.dp)
+    val shape = RoundedCornerShape(14.dp)
     M3Card(
         modifier = modifier.shadow(
-            elevation = 10.dp,
+            elevation = 2.dp,
             shape = shape,
             ambientColor = Color(0x44000000),
             spotColor = Color(0x66000000)
         ),
         shape = shape,
         colors = colors,
-        border = BorderStroke(1.dp, Brush.verticalGradient(listOf(Color.White, Color(0xFFCBD5E1)))),
+        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
         content = content
     )
 }
@@ -60,14 +60,14 @@ fun Button(
     enabled: Boolean = true,
     content: @Composable RowScope.() -> Unit
 ) {
-    val shape = RoundedCornerShape(16.dp)
-    val top = if (enabled) Color(0xFF2DD4BF) else Color(0xFFE2E8F0)
+    val shape = RoundedCornerShape(12.dp)
+    val top = if (enabled) Color(0xFF14958A) else Color(0xFFE2E8F0)
     val bottom = if (enabled) Color(0xFF0F766E) else Color(0xFFCBD5E1)
     Box(
         modifier = modifier
             .heightIn(min = 50.dp)
             .shadow(
-                elevation = if (enabled) 10.dp else 0.dp,
+                elevation = if (enabled) 2.dp else 0.dp,
                 shape = shape,
                 ambientColor = Color(0x55000000),
                 spotColor = Color(0xFF0F766E)

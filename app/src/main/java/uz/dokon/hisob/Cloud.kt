@@ -122,7 +122,7 @@ object Cloud {
         return base + "/shops/" + code + "/shipments" + (if (id != null) "/$id" else "") + ".json"
     }
 
-    private fun call(method: String, u: String, body: String?): String {
+    fun call(method: String, u: String, body: String?): String {
         val c = URL(u).openConnection() as HttpURLConnection
         try {
             c.requestMethod = method

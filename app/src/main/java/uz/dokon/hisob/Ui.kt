@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.ImageBitmap
 import java.io.File
 
 val Teal = Color(0xFF0F766E)
@@ -36,6 +37,21 @@ object Store {
     var shipments by mutableStateOf<List<Shipment>>(emptyList())
     var syncError by mutableStateOf<String?>(null)
     val refreshKey = mutableIntStateOf(0)
+
+    // Chat
+    var chat by mutableStateOf<List<ChatMsg>>(emptyList())
+    var readOther by mutableStateOf(0L)
+    var typing by mutableStateOf(false)
+    var chatOpen by mutableStateOf(false)
+    var seenTs by mutableStateOf(0L)
+    val imgCache = HashMap<String, ImageBitmap>()
+
+    fun markSeen(ts: Long) {
+        if (ts > seenTs) {
+            seenTs = ts
+            prefs.edit().putLong("seen_" + lastRole, ts).apply()
+        }
+    }
 
     fun configured(): Boolean = dbUrl.isNotBlank() && Cloud.cleanCode(shopCode).isNotEmpty()
 
@@ -64,6 +80,7 @@ object Store {
             lastRole = prefs.getString("role", "") ?: ""
             // Faqat "Meni eslab qol" belgilangan bo'lsa, kirish ekrani o'tkazib yuboriladi
             role = if (prefs.getBoolean("remember", false) && lastRole.isNotEmpty()) lastRole else ""
+            seenTs = prefs.getLong("seen_" + lastRole, 0L)
             dbUrl = prefs.getString("url", "") ?: ""
             shopCode = prefs.getString("code", "") ?: ""
             myName = prefs.getString("name", "") ?: ""
@@ -73,11 +90,15 @@ object Store {
     fun login(r: String, remember: Boolean) {
         role = r
         lastRole = r
+        seenTs = prefs.getLong("seen_$r", 0L)
+        chat = emptyList()
         prefs.edit().putString("role", r).putBoolean("remember", remember).apply()
     }
 
     fun logout() {
         role = ""
+        typing = false
+        chatOpen = false
         prefs.edit().putBoolean("remember", false).apply()
     }
 
@@ -255,12 +276,8 @@ fun StatCard(label: String, value: String, modifier: Modifier = Modifier, color:
 
 @Composable
 fun ScreenTitle(text: String) {
-    Text(
-        text,
-        style = MaterialTheme.typography.titleLarge,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(vertical = 8.dp)
-    )
+    // Sarlavha endi yuqori panelda ko'rsatiladi
+    Spacer(Modifier.height(4.dp))
 }
 
 @Composable
