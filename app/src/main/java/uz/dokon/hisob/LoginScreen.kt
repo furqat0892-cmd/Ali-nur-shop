@@ -12,236 +12,163 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 
 /**
  * Kirish ekrani (tepadan pastga):
- * brend rasmi, 1) Do'kon egasi, 2) Sotuvchi, 3) login, 4) telefon raqami, 5) parol, parolni tiklash.
+ * brend rasmi, 1) Do'kon egasi, 2) Sotuvchi, 3) Gmail, 4) parol.
+ * Gmail va parol Firebase Authentication orqali tekshiriladi. Parol unutilsa Gmail'ga havola yuboriladi.
  */
 @Composable
 fun LoginScreen() {
+    val scope = rememberCoroutineScope()
     var role by remember { mutableStateOf(Store.lastRole) }
-    var login by remember { mutableStateOf(Auth.LOGIN) }
-    var phone by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf(Store.prefs.getString("email", "") ?: "") }
     var pw by remember { mutableStateOf("") }
     var pw2 by remember { mutableStateOf("") }
     var showPw by remember { mutableStateOf(false) }
     var keep by remember { mutableStateOf(true) }
+    var register by remember { mutableStateOf(false) }
+    var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
-    // 0 = oddiy kirish, 1 = tiklash kodini kiritish, 2 = yangi parol o'rnatish
-    var recover by remember { mutableIntStateOf(0) }
-    var codeInput by remember { mutableStateOf("") }
-    var shownCode by remember { mutableStateOf<String?>(null) }
-
-    val roleSet = role.isNotEmpty() && Auth.isSet(role)
-    val setup = role.isNotEmpty() && !roleSet
+    var info by remember { mutableStateOf<String?>(null) }
 
     fun pickRole(r: String) {
         role = r
         error = null
-        phone = ""
-        pw = ""
-        pw2 = ""
-        recover = 0
-        codeInput = ""
+        info = null
     }
 
-    fun loginOk(): Boolean {
+    fun mail(): String = email.trim().lowercase()
+
+    fun check(needPw: Boolean): Boolean {
+        info = null
         if (role.isEmpty()) {
             error = "Avval rolni tanlang: Do'kon egasi yoki Sotuvchi"
             return false
         }
-        if (login.trim().lowercase() != Auth.LOGIN) {
-            error = "Login noto'g'ri"
+        val m = mail()
+        if (!m.contains("@") || !m.contains(".") || m.length < 6) {
+            error = "Gmail manzilini to'g'ri yozing (masalan: ism@gmail.com)"
             return false
         }
+        if (needPw) {
+            if (pw.length < 6) {
+                error = "Parol kamida 6 belgidan iborat bo'lsin"
+                return false
+            }
+            if (register && pw != pw2) {
+                error = "Ikkala parol bir xil emas"
+                return false
+            }
+        }
+        error = null
         return true
     }
 
-    fun phoneOk(): Boolean {
-        if (!Auth.phoneValid(phone)) {
-            error = "Telefon raqamini to'liq kiriting (kamida 9 raqam)"
-            return false
-        }
-        return true
-    }
-
-    fun finishSetup() {
-        if (phone.isNotBlank()) Auth.savePhone(role, phone)
-        shownCode = Auth.setPassword(role, pw)
-    }
-
-    fun newPasswordOk(): Boolean {
-        if (pw.length < 4) {
-            error = "Parol kamida 4 belgidan iborat bo'lsin"
-            return false
-        }
-        if (pw != pw2) {
-            error = "Ikkala parol bir xil emas"
-            return false
-        }
-        if (Auth.sameAsOther(role, pw)) {
-            error = "Bu parol boshqa rol uchun ishlatilgan. Do'kon egasi va Sotuvchi parollari har xil bo'lishi kerak"
-            return false
-        }
-        return true
+    fun finish() {
+        Store.prefs.edit().putString("email", mail()).apply()
+        Store.login(role, keep)
     }
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         BrandHero()
         Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             Text(
-                when (recover) {
-                    1 -> "Parolni tiklash"
-                    2 -> "Yangi parol"
-                    else -> "Kirish"
-                },
+                if (register) "Ro'yxatdan o'tish" else "Kirish",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
             Spacer(Modifier.height(6.dp))
             Banner(error, true)
+            Banner(info, false)
 
             // 1-qator va 2-qator: rol
             RoleRow("Do'kon egasi", "Tovar jo'natadi, qabul natijasini ko'radi", role == "owner") { pickRole("owner") }
             RoleRow("Sotuvchi", "Tovar qabul qiladi, sotadi, omborni yuritadi", role == "receiver") { pickRole("receiver") }
             Spacer(Modifier.height(10.dp))
 
-            if (recover == 1) {
+            // 3-qator: Gmail
+            TextInput(email, { email = it }, "Gmail manzili", keyboard = KeyboardType.Email)
+            Spacer(Modifier.height(8.dp))
+            // 4-qator: parol
+            PasswordField(pw, { pw = it }, if (register) "Yangi parol (kamida 6 belgi)" else "Parol", showPw) { showPw = !showPw }
+            if (register) {
+                Spacer(Modifier.height(8.dp))
+                PasswordField(pw2, { pw2 = it }, "Parolni takrorlang", showPw) { showPw = !showPw }
                 Text(
-                    "${Auth.roleName(role)} parolini o'rnatganingizda berilgan tiklash kodini kiriting (XXXX-XXXX).",
+                    "Gmail'ingizga tasdiqlash havolasi yuboriladi. Uni bosgandan keyin kira olasiz.",
                     color = Muted,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 6.dp)
                 )
-                Spacer(Modifier.height(8.dp))
-                if (Auth.hasPhone(role)) {
-                    TextInput(phone, { phone = it }, "Telefon raqami", keyboard = KeyboardType.Phone)
-                    Spacer(Modifier.height(8.dp))
-                }
-                TextInput(codeInput, { codeInput = it.uppercase() }, "Tiklash kodi")
-                Spacer(Modifier.height(12.dp))
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = {
-                        if (Auth.hasPhone(role) && !Auth.checkPhone(role, phone)) {
-                            error = "Telefon raqami noto'g'ri"
-                        } else if (Auth.checkRecovery(role, codeInput)) {
-                            recover = 2
-                            error = null
-                            pw = ""
-                            pw2 = ""
-                        } else {
-                            error = "Tiklash kodi noto'g'ri"
-                        }
-                    }
-                ) { Text("Davom etish") }
-                TextButton(onClick = {
-                    recover = 0
-                    error = null
-                }) { Text("← Orqaga") }
-            } else if (recover == 2) {
-                PasswordField(pw, { pw = it }, "Yangi parol", showPw) { showPw = !showPw }
-                Spacer(Modifier.height(8.dp))
-                PasswordField(pw2, { pw2 = it }, "Yangi parolni takrorlang", showPw) { showPw = !showPw }
-                Spacer(Modifier.height(12.dp))
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = {
-                        if (newPasswordOk()) shownCode = Auth.setPassword(role, pw)
-                    }
-                ) { Text("Yangi parolni saqlash") }
             } else {
-                if (setup) {
-                    Text(
-                        "${Auth.roleName(role)} uchun parol hali o'rnatilmagan. Yangi parol o'ylab toping.",
-                        color = Muted,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Spacer(Modifier.height(8.dp))
-                }
-                // 3-qator: login
-                TextInput(login, { login = it }, "Login")
-                Spacer(Modifier.height(8.dp))
-                // 4-qator: telefon raqami
-                TextInput(
-                    phone,
-                    { phone = it },
-                    if (roleSet && Auth.hasPhone(role)) "Telefon raqami" else "Telefon raqamingiz (+998...)",
-                    keyboard = KeyboardType.Phone
-                )
-                Spacer(Modifier.height(8.dp))
-                // 5-qator: parol
-                PasswordField(pw, { pw = it }, if (setup) "Yangi parol" else "Parol", showPw) { showPw = !showPw }
-                if (setup) {
-                    Spacer(Modifier.height(8.dp))
-                    PasswordField(pw2, { pw2 = it }, "Parolni takrorlang", showPw) { showPw = !showPw }
-                }
-                if (roleSet) {
-                    TextButton(onClick = {
-                        recover = 1
-                        error = null
-                        pw = ""
-                    }) { Text("Parolni unutdingizmi? Tiklash") }
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = keep, onCheckedChange = { keep = it })
-                    Text("Meni eslab qol", modifier = Modifier.clickable { keep = !keep })
-                }
-                Spacer(Modifier.height(8.dp))
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
+                TextButton(
+                    enabled = !busy,
                     onClick = {
-                        if (loginOk() && phoneOk()) {
-                            if (setup) {
-                                if (newPasswordOk()) finishSetup()
-                            } else if (Auth.hasPhone(role) && !Auth.checkPhone(role, phone)) {
-                                error = "Telefon raqami noto'g'ri"
-                            } else if (Auth.check(role, pw)) {
-                                if (!Auth.hasPhone(role)) Auth.savePhone(role, phone)
-                                Store.login(role, keep)
-                            } else {
-                                error = "Parol noto'g'ri"
+                        if (check(false)) {
+                            busy = true
+                            scope.launch {
+                                try {
+                                    GAuth.resetPassword(mail())
+                                    info = "Parolni tiklash havolasi ${mail()} manziliga yuborildi. Pochtangizni (Spam ham) tekshiring"
+                                } catch (e: Exception) {
+                                    error = e.message ?: "Xatolik"
+                                } finally {
+                                    busy = false
+                                }
                             }
                         }
                     }
-                ) { Text(if (setup) "Parolni o'rnatish" else "Kirish") }
+                ) { Text("Parolni unutdingizmi? Gmail'ga havola yuborish") }
             }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = keep, onCheckedChange = { keep = it })
+                Text("Meni eslab qol", modifier = Modifier.clickable { keep = !keep })
+            }
+            Spacer(Modifier.height(8.dp))
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !busy,
+                onClick = {
+                    if (check(true)) {
+                        busy = true
+                        scope.launch {
+                            try {
+                                if (register) {
+                                    GAuth.signUp(mail(), pw)
+                                    register = false
+                                    pw = ""
+                                    pw2 = ""
+                                    info = "Ro'yxatdan o'tdingiz. ${mail()} manziliga tasdiqlash havolasi yuborildi: uni bosing, so'ng shu yerdan kiring"
+                                } else {
+                                    GAuth.signIn(mail(), pw)
+                                    finish()
+                                }
+                            } catch (e: Exception) {
+                                error = e.message ?: "Xatolik"
+                            } finally {
+                                busy = false
+                            }
+                        }
+                    }
+                }
+            ) { Text(if (busy) "Iltimos kuting..." else if (register) "Ro'yxatdan o'tish" else "Kirish") }
+            TextButton(onClick = {
+                register = !register
+                error = null
+                info = null
+                pw = ""
+                pw2 = ""
+            }) { Text(if (register) "Hisobim bor. Kirish" else "Birinchi martami? Ro'yxatdan o'tish") }
             Spacer(Modifier.height(24.dp))
         }
-    }
-
-    shownCode?.let { code ->
-        AlertDialog(
-            onDismissRequest = {},
-            title = { Text("Tiklash kodingiz") },
-            text = {
-                Column {
-                    Text(
-                        "Parolni unutib qo'ysangiz, faqat shu kod bilan tiklay olasiz. Uni qog'ozga yozib, xavfsiz joyda saqlang. Kod faqat hozir, bir marta ko'rsatiladi."
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    Text(
-                        code,
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Monospace,
-                        color = Teal
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    shownCode = null
-                    Store.login(role, keep)
-                }) { Text("Yozib oldim, kirish") }
-            }
-        )
     }
 }
 

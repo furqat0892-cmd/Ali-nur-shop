@@ -62,8 +62,8 @@ object Store {
             db.writableDatabase
             prefs = app.getSharedPreferences("dokon_prefs", Context.MODE_PRIVATE)
             lastRole = prefs.getString("role", "") ?: ""
-            // Faqat "Meni eslab qol" belgilangan va parol o'rnatilgan bo'lsa, kirish ekrani o'tkazib yuboriladi
-            role = if (prefs.getBoolean("remember", false) && lastRole.isNotEmpty() && Auth.isSet(lastRole)) lastRole else ""
+            // Faqat "Meni eslab qol" belgilangan bo'lsa, kirish ekrani o'tkazib yuboriladi
+            role = if (prefs.getBoolean("remember", false) && lastRole.isNotEmpty()) lastRole else ""
             dbUrl = prefs.getString("url", "") ?: ""
             shopCode = prefs.getString("code", "") ?: ""
             myName = prefs.getString("name", "") ?: ""
