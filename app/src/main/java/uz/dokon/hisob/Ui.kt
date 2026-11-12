@@ -194,13 +194,15 @@ fun TextInput(
     value: String,
     onChange: (String) -> Unit,
     label: String,
-    modifier: Modifier = Modifier.fillMaxWidth()
+    modifier: Modifier = Modifier.fillMaxWidth(),
+    keyboard: KeyboardType = KeyboardType.Text
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onChange,
         label = { Text(label) },
         singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboard),
         modifier = modifier
     )
 }

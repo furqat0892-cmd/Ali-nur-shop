@@ -63,6 +63,20 @@ object Auth {
     fun sameAsOther(role: String, pw: String): Boolean =
         isSet(other(role)) && check(other(role), pw)
 
+    /** Telefon raqamidan faqat raqamlar, oxirgi 9 tasi (+998 90 123 45 67 -> 901234567). */
+    fun normPhone(s: String): String = s.filter { it.isDigit() }.takeLast(9)
+
+    fun phoneValid(s: String): Boolean = s.filter { it.isDigit() }.length >= 9
+
+    fun hasPhone(role: String): Boolean = Store.prefs.contains("ph_$role")
+
+    fun checkPhone(role: String, phone: String): Boolean =
+        Store.prefs.getString("ph_$role", null) == normPhone(phone)
+
+    fun savePhone(role: String, phone: String) {
+        Store.prefs.edit().putString("ph_$role", normPhone(phone)).apply()
+    }
+
     private fun normCode(s: String): String = s.uppercase().filter { it.isLetterOrDigit() }
 
     fun checkRecovery(role: String, code: String): Boolean =

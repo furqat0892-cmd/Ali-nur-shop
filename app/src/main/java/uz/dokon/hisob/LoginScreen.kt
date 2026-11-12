@@ -22,12 +22,13 @@ import androidx.compose.ui.unit.sp
 
 /**
  * Kirish ekrani (tepadan pastga):
- * brend rasmi, 1) Do'kon egasi, 2) Sotuvchi, 3) login, 4) parol, parolni tiklash.
+ * brend rasmi, 1) Do'kon egasi, 2) Sotuvchi, 3) login, 4) telefon raqami, 5) parol, parolni tiklash.
  */
 @Composable
 fun LoginScreen() {
     var role by remember { mutableStateOf(Store.lastRole) }
     var login by remember { mutableStateOf(Auth.LOGIN) }
+    var phone by remember { mutableStateOf("") }
     var pw by remember { mutableStateOf("") }
     var pw2 by remember { mutableStateOf("") }
     var showPw by remember { mutableStateOf(false) }
@@ -44,6 +45,7 @@ fun LoginScreen() {
     fun pickRole(r: String) {
         role = r
         error = null
+        phone = ""
         pw = ""
         pw2 = ""
         recover = 0
@@ -60,6 +62,19 @@ fun LoginScreen() {
             return false
         }
         return true
+    }
+
+    fun phoneOk(): Boolean {
+        if (!Auth.phoneValid(phone)) {
+            error = "Telefon raqamini to'liq kiriting (kamida 9 raqam)"
+            return false
+        }
+        return true
+    }
+
+    fun finishSetup() {
+        if (phone.isNotBlank()) Auth.savePhone(role, phone)
+        shownCode = Auth.setPassword(role, pw)
     }
 
     fun newPasswordOk(): Boolean {
@@ -105,12 +120,18 @@ fun LoginScreen() {
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(Modifier.height(8.dp))
+                if (Auth.hasPhone(role)) {
+                    TextInput(phone, { phone = it }, "Telefon raqami", keyboard = KeyboardType.Phone)
+                    Spacer(Modifier.height(8.dp))
+                }
                 TextInput(codeInput, { codeInput = it.uppercase() }, "Tiklash kodi")
                 Spacer(Modifier.height(12.dp))
                 Button(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = {
-                        if (Auth.checkRecovery(role, codeInput)) {
+                        if (Auth.hasPhone(role) && !Auth.checkPhone(role, phone)) {
+                            error = "Telefon raqami noto'g'ri"
+                        } else if (Auth.checkRecovery(role, codeInput)) {
                             recover = 2
                             error = null
                             pw = ""
@@ -147,7 +168,15 @@ fun LoginScreen() {
                 // 3-qator: login
                 TextInput(login, { login = it }, "Login")
                 Spacer(Modifier.height(8.dp))
-                // 4-qator: parol
+                // 4-qator: telefon raqami
+                TextInput(
+                    phone,
+                    { phone = it },
+                    if (roleSet && Auth.hasPhone(role)) "Telefon raqami" else "Telefon raqamingiz (+998...)",
+                    keyboard = KeyboardType.Phone
+                )
+                Spacer(Modifier.height(8.dp))
+                // 5-qator: parol
                 PasswordField(pw, { pw = it }, if (setup) "Yangi parol" else "Parol", showPw) { showPw = !showPw }
                 if (setup) {
                     Spacer(Modifier.height(8.dp))
@@ -168,10 +197,13 @@ fun LoginScreen() {
                 Button(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = {
-                        if (loginOk()) {
+                        if (loginOk() && phoneOk()) {
                             if (setup) {
-                                if (newPasswordOk()) shownCode = Auth.setPassword(role, pw)
+                                if (newPasswordOk()) finishSetup()
+                            } else if (Auth.hasPhone(role) && !Auth.checkPhone(role, phone)) {
+                                error = "Telefon raqami noto'g'ri"
                             } else if (Auth.check(role, pw)) {
+                                if (!Auth.hasPhone(role)) Auth.savePhone(role, phone)
                                 Store.login(role, keep)
                             } else {
                                 error = "Parol noto'g'ri"
