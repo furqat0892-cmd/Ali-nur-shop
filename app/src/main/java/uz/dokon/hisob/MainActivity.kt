@@ -115,7 +115,7 @@ private fun AppRoot(role: String) {
             } else {
                 when (tab) {
                     0 -> SaleScreen()
-                    1 -> ProductsScreen()
+                    1 -> OmborScreen()
                     2 -> InboxScreen()
                     3 -> ReportScreen()
                     else -> MoreScreen()

@@ -15,12 +15,6 @@ import kotlinx.coroutines.delay
 fun StockScreen() {
     var tab by remember { mutableIntStateOf(0) }
     Column(Modifier.fillMaxSize()) {
-        Text(
-            "Kirim / Chiqim",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(start = 12.dp, top = 16.dp, bottom = 4.dp)
-        )
         TabRow(selectedTabIndex = tab, containerColor = androidx.compose.ui.graphics.Color.Transparent) {
             listOf("Kirim", "Chiqim", "Tarix").forEachIndexed { i, t ->
                 Tab(selected = tab == i, onClick = { tab = i }, text = { Text(t) })

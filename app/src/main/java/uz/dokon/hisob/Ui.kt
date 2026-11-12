@@ -159,16 +159,34 @@ fun QtyField(
     value: String,
     onChange: (String) -> Unit,
     label: String,
-    modifier: Modifier = Modifier.fillMaxWidth()
+    modifier: Modifier = Modifier.fillMaxWidth(),
+    decimal: Boolean = true
 ) {
     OutlinedTextField(
         value = value,
-        onValueChange = { onChange(cleanQty(it)) },
+        onValueChange = { onChange(if (decimal) cleanQty(it) else it.filter { ch -> ch.isDigit() }.take(9)) },
         label = { Text(label) },
         singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+        keyboardOptions = KeyboardOptions(keyboardType = if (decimal) KeyboardType.Decimal else KeyboardType.Number),
         modifier = modifier
     )
+}
+
+/** Son maydoni: yonida − va + tugmalari bor. */
+@Composable
+fun QtyStepper(
+    value: String,
+    onChange: (String) -> Unit,
+    label: String,
+    decimal: Boolean = false
+) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        OutlinedButton(onClick = { onChange(fmtQty(maxOf(0.0, value.toQty() - 1))) }) { Text("−") }
+        Spacer(Modifier.width(6.dp))
+        QtyField(value, onChange, label, Modifier.weight(1f), decimal)
+        Spacer(Modifier.width(6.dp))
+        OutlinedButton(onClick = { onChange(fmtQty(value.toQty() + 1)) }) { Text("+") }
+    }
 }
 
 @Composable
