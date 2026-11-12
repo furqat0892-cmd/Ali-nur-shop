@@ -2,6 +2,15 @@
 
 Idish-tovoq va uy-xo'jalik do'koni uchun ombor, sotuv va **tovar jo'natish/qabul qilish** ilovasi (Kotlin + Jetpack Compose).
 
+## Kirish (login va parol)
+Ilova ochilganda tepada Ali nur shop brend rasmi, pastda ketma-ket: 1) **Do'kon egasi**, 2) **Sotuvchi**, 3) **Login**, 4) **Parol**.
+- Login ikkala rol uchun bir xil: `ali_nur_sh0p`
+- Parol har rol uchun **alohida**. Birinchi kirishda rolni tanlab, yangi parol o'rnatiladi (kamida 6 belgi). Egasi va sotuvchi paroli bir xil bo'lishi mumkin emas.
+- Parol o'rnatilganda **tiklash kodi** (XXXX-XXXX) beriladi va faqat bir marta ko'rsatiladi. Uni qog'ozga yozib qo'ying.
+- Parolni unutsangiz: parol ostidagi **"Parolni unutdingizmi? Tiklash"** ni bosing, tiklash kodini kiriting va yangi parol o'rnating (yangi tiklash kodi beriladi).
+- "Meni eslab qol" belgilangan bo'lsa, keyingi safar kirish ekrani o'tkazib yuboriladi. Chiqish: Sozlamalar → "Chiqish".
+- Parollar telefonda xesh ko'rinishida saqlanadi, asl parol saqlanmaydi.
+
 ## Ikki rol (bitta APK)
 **Do'kon egasi**: tovarni (nomi, soni, narxi) jo'natadi, qabul natijasini ko'radi, 10 kunlik jo'natma hisobotini ko'radi.
 
@@ -23,7 +32,7 @@ Idish-tovoq va uy-xo'jalik do'koni uchun ombor, sotuv va **tovar jo'natish/qabul
 }
 ```
 4. **Data** bo'limi tepasidagi havolani nusxalang (`https://...firebaseio.com` yoki `https://...firebasedatabase.app`).
-5. Ikkala telefonda ilovani oching: rolni tanlang, **bir xil baza havolasi** va **bir xil do'kon kodi** kiriting (kodni uzun va tasodifiy qiling, u parol vazifasini bajaradi), "Ulanishni tekshirish" ni bosing.
+5. Ikkala telefonda kiring (rol kirish ekranida tanlanadi), Sozlamalar bo'limiga **bir xil baza havolasi** va **bir xil do'kon kodi** kiriting (kodni uzun va tasodifiy qiling, u parol vazifasini bajaradi), "Ulanishni tekshirish" ni bosing.
 
 ## APK olish
 Hamma narsani GitHub'ga yuklang (`main`), Actions → "Build APK" → Artifacts → `Dokon-Hisobi-APK`.

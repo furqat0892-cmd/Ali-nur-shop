@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
                     )
                 ) {
                     if (Store.role.isEmpty()) {
-                        SettingsScreen(firstRun = true)
+                        LoginScreen()
                     } else {
                         AppRoot(Store.role)
                     }

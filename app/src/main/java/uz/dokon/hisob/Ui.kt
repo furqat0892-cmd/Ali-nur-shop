@@ -29,6 +29,7 @@ object Store {
     // Rol va bulut (Firebase) sozlamalari
     lateinit var prefs: android.content.SharedPreferences
     var role by mutableStateOf("")
+    var lastRole by mutableStateOf("")
     var dbUrl by mutableStateOf("")
     var shopCode by mutableStateOf("")
     var myName by mutableStateOf("")
@@ -60,11 +61,24 @@ object Store {
             db = Db(app)
             db.writableDatabase
             prefs = app.getSharedPreferences("dokon_prefs", Context.MODE_PRIVATE)
-            role = prefs.getString("role", "") ?: ""
+            lastRole = prefs.getString("role", "") ?: ""
+            // Faqat "Meni eslab qol" belgilangan va parol o'rnatilgan bo'lsa, kirish ekrani o'tkazib yuboriladi
+            role = if (prefs.getBoolean("remember", false) && lastRole.isNotEmpty() && Auth.isSet(lastRole)) lastRole else ""
             dbUrl = prefs.getString("url", "") ?: ""
             shopCode = prefs.getString("code", "") ?: ""
             myName = prefs.getString("name", "") ?: ""
         }
+    }
+
+    fun login(r: String, remember: Boolean) {
+        role = r
+        lastRole = r
+        prefs.edit().putString("role", r).putBoolean("remember", remember).apply()
+    }
+
+    fun logout() {
+        role = ""
+        prefs.edit().putBoolean("remember", false).apply()
     }
 
     fun bump() {

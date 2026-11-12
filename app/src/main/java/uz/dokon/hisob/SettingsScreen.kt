@@ -5,14 +5,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
+/** Sozlamalar: ism, Firebase baza havolasi va do'kon kodi. Rol endi kirish ekranida tanlanadi. */
 @Composable
-fun SettingsScreen(firstRun: Boolean) {
+fun SettingsScreen(firstRun: Boolean = false) {
     val scope = rememberCoroutineScope()
-    var role by remember { mutableStateOf(Store.role) }
     var name by remember { mutableStateOf(Store.myName) }
     var url by remember { mutableStateOf(Store.dbUrl) }
     var code by remember { mutableStateOf(Store.shopCode) }
@@ -21,11 +20,6 @@ fun SettingsScreen(firstRun: Boolean) {
     var testing by remember { mutableStateOf(false) }
 
     fun validate(): Boolean {
-        if (role.isEmpty()) {
-            isError = true
-            message = "Rolni tanlang"
-            return false
-        }
         if (url.isNotBlank() && !url.trim().startsWith("https://")) {
             isError = true
             message = "Baza havolasi https:// bilan boshlanishi kerak"
@@ -35,21 +29,13 @@ fun SettingsScreen(firstRun: Boolean) {
     }
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(12.dp)) {
-        ScreenTitle(if (firstRun) "Xush kelibsiz" else "Sozlamalar")
+        ScreenTitle("Sozlamalar")
         Banner(message, isError)
-        Text("Siz kimsiz?", fontWeight = FontWeight.SemiBold)
-        Spacer(Modifier.height(6.dp))
-        RoleCard(
-            title = "Do'kon egasi",
-            desc = "Tovar jo'natadi va qabul natijasini ko'radi",
-            selected = role == "owner"
-        ) { role = "owner" }
-        RoleCard(
-            title = "Qabul qiluvchi (do'kon)",
-            desc = "Jo'natilgan tovarni qabul qiladi, sotuv va omborni yuritadi",
-            selected = role == "receiver"
-        ) { role = "receiver" }
-
+        Text(
+            "Rol: " + Auth.roleName(Store.role),
+            color = Muted,
+            style = MaterialTheme.typography.bodyMedium
+        )
         Spacer(Modifier.height(12.dp))
         TextInput(name, { name = it }, "Ismingiz (xabarlarda ko'rinadi)")
         Spacer(Modifier.height(8.dp))
@@ -67,7 +53,7 @@ fun SettingsScreen(firstRun: Boolean) {
             modifier = Modifier.fillMaxWidth(),
             onClick = {
                 if (validate()) {
-                    Store.saveSettings(role, url, code, name)
+                    Store.saveSettings(Store.role, url, code, name)
                     isError = false
                     message = "Saqlandi"
                 }
@@ -79,7 +65,7 @@ fun SettingsScreen(firstRun: Boolean) {
             enabled = !testing,
             onClick = {
                 if (validate()) {
-                    Store.saveSettings(role, url, code, name)
+                    Store.saveSettings(Store.role, url, code, name)
                     if (!Store.configured()) {
                         isError = true
                         message = "Baza havolasi va do'kon kodini kiriting"
@@ -102,33 +88,11 @@ fun SettingsScreen(firstRun: Boolean) {
             }
         ) { Text(if (testing) "Tekshirilmoqda..." else "Ulanishni tekshirish") }
 
-        if (firstRun) {
-            Spacer(Modifier.height(4.dp))
-            Text(
-                "Bazani keyinroq ham sozlashingiz mumkin: faqat rolni tanlab Saqlash bosing.",
-                style = MaterialTheme.typography.bodySmall,
-                color = Muted
-            )
-        }
         Spacer(Modifier.height(24.dp))
-    }
-}
-
-@Composable
-private fun RoleCard(title: String, desc: String, selected: Boolean, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = if (selected) androidx.compose.ui.graphics.Color(0xFFCCFBF1) else androidx.compose.ui.graphics.Color.White
-        )
-    ) {
-        Column(Modifier.padding(14.dp)) {
-            Text(
-                (if (selected) "✓ " else "") + title,
-                fontWeight = FontWeight.Bold,
-                color = if (selected) Teal else androidx.compose.ui.graphics.Color.Unspecified
-            )
-            Text(desc, style = MaterialTheme.typography.bodySmall, color = Muted)
-        }
+        OutlinedButton(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = { Store.logout() }
+        ) { Text("Chiqish (kirish ekraniga qaytish)") }
+        Spacer(Modifier.height(24.dp))
     }
 }
