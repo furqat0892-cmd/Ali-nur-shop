@@ -6,7 +6,7 @@ Idish-tovoq va uy-xo'jalik do'koni uchun ombor, sotuv va **tovar jo'natish/qabul
 Ilova ochilganda tepada Ali nur shop brend rasmi, pastda ketma-ket: 1) **Do'kon egasi**, 2) **Sotuvchi**, 3) **Login**, 4) **Telefon raqami**, 5) **Parol**.
 - Login ikkala rol uchun bir xil: `ali_nur_sh0p`
 - Telefon raqami parol o'rnatilganda saqlanadi; keyingi kirishda va parolni tiklashda shu raqam so'raladi.
-- Parol har rol uchun **alohida**. Birinchi kirishda rolni tanlab, yangi parol o'rnatiladi (kamida 6 belgi). Egasi va sotuvchi paroli bir xil bo'lishi mumkin emas.
+- Parol har rol uchun **alohida**. Birinchi kirishda rolni tanlab, yangi parol o'rnatiladi (kamida 4 belgi). Egasi va sotuvchi paroli bir xil bo'lishi mumkin emas.
 - Parol o'rnatilganda **tiklash kodi** (XXXX-XXXX) beriladi va faqat bir marta ko'rsatiladi. Uni qog'ozga yozib qo'ying.
 - Parolni unutsangiz: parol ostidagi **"Parolni unutdingizmi? Tiklash"** ni bosing, tiklash kodini kiriting va yangi parol o'rnating (yangi tiklash kodi beriladi).
 - "Meni eslab qol" belgilangan bo'lsa, keyingi safar kirish ekrani o'tkazib yuboriladi. Chiqish: Sozlamalar → "Chiqish".

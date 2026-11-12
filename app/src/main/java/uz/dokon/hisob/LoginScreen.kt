@@ -78,8 +78,8 @@ fun LoginScreen() {
     }
 
     fun newPasswordOk(): Boolean {
-        if (pw.length < 6) {
-            error = "Parol kamida 6 belgidan iborat bo'lsin"
+        if (pw.length < 4) {
+            error = "Parol kamida 4 belgidan iborat bo'lsin"
             return false
         }
         if (pw != pw2) {

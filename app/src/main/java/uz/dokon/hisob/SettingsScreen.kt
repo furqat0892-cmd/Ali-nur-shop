@@ -5,6 +5,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
@@ -18,6 +22,12 @@ fun SettingsScreen(firstRun: Boolean = false) {
     var message by remember { mutableStateOf<String?>(null) }
     var isError by remember { mutableStateOf(false) }
     var testing by remember { mutableStateOf(false) }
+    var oldPw by remember { mutableStateOf("") }
+    var newPw by remember { mutableStateOf("") }
+    var newPw2 by remember { mutableStateOf("") }
+    var pwMsg by remember { mutableStateOf<String?>(null) }
+    var pwErr by remember { mutableStateOf(false) }
+    var newCode by remember { mutableStateOf<String?>(null) }
 
     fun validate(): Boolean {
         if (url.isNotBlank() && !url.trim().startsWith("https://")) {
@@ -89,10 +99,68 @@ fun SettingsScreen(firstRun: Boolean = false) {
         ) { Text(if (testing) "Tekshirilmoqda..." else "Ulanishni tekshirish") }
 
         Spacer(Modifier.height(24.dp))
+        Text("Parolni o'zgartirish", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Banner(pwMsg, pwErr)
+        Spacer(Modifier.height(6.dp))
+        OutlinedTextField(
+            value = oldPw, onValueChange = { oldPw = it }, label = { Text("Hozirgi parol") },
+            singleLine = true, visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(Modifier.height(6.dp))
+        OutlinedTextField(
+            value = newPw, onValueChange = { newPw = it }, label = { Text("Yangi parol (kamida 4 belgi)") },
+            singleLine = true, visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(Modifier.height(6.dp))
+        OutlinedTextField(
+            value = newPw2, onValueChange = { newPw2 = it }, label = { Text("Yangi parolni takrorlang") },
+            singleLine = true, visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(Modifier.height(8.dp))
+        OutlinedButton(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = {
+                pwErr = true
+                when {
+                    !Auth.check(Store.role, oldPw) -> pwMsg = "Hozirgi parol noto'g'ri"
+                    newPw.length < 4 -> pwMsg = "Yangi parol kamida 4 belgidan iborat bo'lsin"
+                    newPw != newPw2 -> pwMsg = "Yangi parollar bir xil emas"
+                    Auth.sameAsOther(Store.role, newPw) -> pwMsg = "Bu parol boshqa rol uchun ishlatilgan"
+                    else -> {
+                        newCode = Auth.setPassword(Store.role, newPw)
+                        pwErr = false
+                        pwMsg = "Parol o'zgartirildi"
+                        oldPw = ""
+                        newPw = ""
+                        newPw2 = ""
+                    }
+                }
+            }
+        ) { Text("Parolni saqlash") }
+
+        Spacer(Modifier.height(24.dp))
         OutlinedButton(
             modifier = Modifier.fillMaxWidth(),
             onClick = { Store.logout() }
         ) { Text("Chiqish (kirish ekraniga qaytish)") }
         Spacer(Modifier.height(24.dp))
+    }
+
+    newCode?.let { code ->
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text("Yangi tiklash kodi") },
+            text = {
+                Column {
+                    Text("Eski tiklash kodi endi ishlamaydi. Yangisini qog'ozga yozib qo'ying.")
+                    Spacer(Modifier.height(12.dp))
+                    Text(code, fontSize = 30.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                }
+            },
+            confirmButton = { TextButton(onClick = { newCode = null }) { Text("Yozib oldim") } }
+        )
     }
 }
