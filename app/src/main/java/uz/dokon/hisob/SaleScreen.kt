@@ -72,7 +72,7 @@ fun SaleScreen() {
                 Column {
                     matches.forEach { p ->
                         Row(
-                            Modifier.fillMaxWidth().clickable {
+                            Modifier.fillMaxWidth().click3d {
                                 SaleDraft.add(p)
                                 query = ""
                             }.padding(12.dp),

@@ -75,7 +75,7 @@ fun ProductsScreen() {
                     items(list, key = { it.id }) { p ->
                         val low = p.stock <= p.minStock
                         Card(
-                            Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { editing = p }
+                            Modifier.fillMaxWidth().padding(vertical = 4.dp).click3d { editing = p }
                         ) {
                             Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Column(Modifier.weight(1f)) {

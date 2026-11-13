@@ -10,6 +10,9 @@ Ilova ochilganda tepada Ali nur shop brend rasmi, pastda ketma-ket: 1) **Do'kon 
 - Firebase'da Authentication → Email/Password yoqilgan bo'lishi va `GAuth.kt` ichida Web API Key yozilgan bo'lishi kerak.
 - "Meni eslab qol" belgilangan bo'lsa, keyingi safar kirish ekrani o'tkazib yuboriladi. Chiqish: Sozlamalar → "Chiqish".
 
+## Bosh sahifa va navigatsiya
+Kirgandan keyin bosh sahifada katta 3D tugmalar (Chat, Sotuv, Ombor, Hisobot, ...) ko'rinadi. Har bir bo'limda yuqori chapda ← orqaga tugmasi bor; telefonning orqaga tugmasi ham bosh sahifaga qaytaradi. Barcha tugma va kartalar bosilganda kichrayib, soyasi pasayadi.
+
 ## Chat (Telegram uslubida)
 Birinchi tabda egasi va sotuvchi o'rtasida chat: matn, rasm (galereyadan), vaqt va ✓ / ✓✓ (o'qildi) belgilari. Tovar jo'natmalari ham chatda pufakcha bo'lib chiqadi, sotuvchi shu yerdan "Qabul qilish"ni bosadi. Ma'lumot Firebase'da: `shops/<kod>/chat`, rasmlar `chat_img`, o'qilgan vaqt `read`.
 

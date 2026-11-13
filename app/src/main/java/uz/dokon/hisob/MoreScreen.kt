@@ -15,7 +15,17 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 
 @Composable
-fun MoreScreen() {
+fun MoreScreen(start: Int = -1) {
+    if (start >= 0) {
+        // Bosh sahifadan to'g'ridan-to'g'ri ochilgan bo'lim (orqaga tugmasi yuqori panelda)
+        when (start) {
+            0 -> SalesHistory()
+            1 -> Customers()
+            2 -> BackupExport()
+            else -> SettingsScreen(firstRun = false)
+        }
+        return
+    }
     var section by remember { mutableIntStateOf(-1) }
     when (section) {
         0 -> Sub("Sotuvlar tarixi", { section = -1 }) { SalesHistory() }
@@ -30,7 +40,7 @@ fun MoreScreen() {
                 "Zaxira va eksport" to "Ma'lumotni saqlash, Excel (CSV)",
                 "Sozlamalar" to "Ism, baza havolasi, do'kon kodi, chiqish"
             ).forEachIndexed { i, (t, d) ->
-                Card(Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { section = i }) {
+                Card(Modifier.fillMaxWidth().padding(vertical = 4.dp).click3d { section = i }) {
                     Column(Modifier.padding(16.dp)) {
                         Text(t, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
                         Text(d, color = Muted, style = MaterialTheme.typography.bodySmall)

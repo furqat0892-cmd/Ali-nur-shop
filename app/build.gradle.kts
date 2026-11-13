@@ -12,8 +12,8 @@ android {
         applicationId = "uz.dokon.hisob"
         minSdk = 24
         targetSdk = 34
-        versionCode = 8
-        versionName = "3.1"
+        versionCode = 11
+        versionName = "3.4"
     }
 
     // Doimiy imzo kaliti: har safar GitHub'da yangi build qilinganda ilova

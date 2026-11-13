@@ -189,7 +189,7 @@ private fun BrandHero() {
 @Composable
 private fun RoleRow(title: String, desc: String, selected: Boolean, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable(onClick = onClick),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).click3d(onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = if (selected) Color(0xFFCCFBF1) else Color.White)
     ) {
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {

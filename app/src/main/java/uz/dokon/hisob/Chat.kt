@@ -178,12 +178,21 @@ private data class TItem(val ts: Long, val msg: ChatMsg?, val ship: Shipment?) {
 
 /** Yuqori panel (Telegram kabi): avatar, sarlavha, kichik yozuv. */
 @Composable
-fun HeaderBar(title: String, subtitle: String) {
+fun HeaderBar(title: String, subtitle: String, onBack: (() -> Unit)? = null) {
     Surface(color = Teal, shadowElevation = 4.dp) {
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            if (onBack != null) {
+                Box(
+                    Modifier.size(44.dp).clip(CircleShape).background(Color(0x33FFFFFF)).click3d(onClick = onBack),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("\u2190", color = Color.White, fontSize = 26.sp, fontWeight = FontWeight.Bold)
+                }
+                Spacer(Modifier.width(10.dp))
+            }
             Box(
                 Modifier.size(40.dp).clip(CircleShape).background(Color(0xFFFFD166)),
                 contentAlignment = Alignment.Center
